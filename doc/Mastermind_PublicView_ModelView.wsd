@@ -1,0 +1,201 @@
+@startuml Mastermind_ModelView_WithFactory_rbadenas
+
+title Mastermind_ModelView_WithFactory_rbadenas
+
+
+!define MAIN LightSeaGreen
+
+skinparam Class {
+	BackgroundColor	White
+	BorderColor	MAIN
+	FontName	Segoe UI
+	FontSize	14
+    FontStyle bold
+    FontColor Black
+	HeaderBackgroundColor MAIN
+    ArrowColor MAIN
+    ArrowFontColor MAIN
+
+    AttributeFontSize 12
+}
+skinparam roundcorner 5
+skinparam stereotypeCBackgroundColor White
+skinparam stereotypeEBackgroundColor Red
+skinparam stereotypeABackgroundColor Aqua
+skinparam classAttributeIconSize 0
+
+instanceOf.mastermind.Mastermind *--> instanceOf.mastermind.models.Game
+instanceOf.mastermind.Mastermind *--> instanceOf.mastermind.views.View
+
+instanceOf.mastermind.Mastermind ^-- instanceOf.mastermind.GraphicsMastermind
+instanceOf.mastermind.Mastermind ^-- instanceOf.mastermind.ConsoleMastermind
+
+instanceOf.mastermind.ConsoleMastermind ..> instanceOf.mastermind.views.console.ConsoleView
+
+instanceOf.mastermind.views.View ^-- instanceOf.mastermind.views.console.ConsoleView
+instanceOf.mastermind.views.console.ConsoleView *--> instanceOf.mastermind.views.console.ConsoleResumeView
+instanceOf.mastermind.views.console.ConsoleView *--> instanceOf.mastermind.views.console.ConsoleProposedCombinationInputView
+
+
+instanceOf.mastermind.views.console.ConsoleView .left.> instanceOf.utils.Console
+instanceOf.mastermind.views.console.ConsoleResumeView .left.> instanceOf.utils.Console
+instanceOf.mastermind.views.console.ConsoleProposedCombinationInputView .left.> instanceOf.utils.Console
+
+instanceOf.mastermind.views.console.ConsoleResumeView .up.> instanceOf.mastermind.views.Message
+instanceOf.mastermind.views.console.ConsoleView .up.> instanceOf.mastermind.views.Message
+instanceOf.mastermind.views.console.ConsoleProposedCombinationInputView .up.> instanceOf.mastermind.views.Message
+
+
+namespace instanceOf.mastermind{
+    abstract class Mastermind {
+        #Mastermind()
+        #play() : void
+        #{abstract} createView(game : Game) : View
+    }
+
+    class ConsoleMastermind {
+        #createView(game : Game) : ConsoleView
+        +main(String[] args) : void
+    }
+
+    class GraphicsMastermind {
+        #createView(game : Game) : GraphicsView
+        +main(String[] args) : void
+    }
+}
+
+
+
+
+
+
+
+namespace instanceOf.mastermind.views{
+
+    abstract class View{
+        #View(game Game)
+        #{abstract} start() : void
+        #{abstract} play() : void
+        #{abstract} isResumed() : boolean
+        +interact() : void
+    }
+
+    enum Message{
+        START_TITTLE
+        ATTEMPT_CAPTION
+        COMBINATION_ENTER
+        COMBINATION_WRONG_COLOR
+        COMBINATION_WRONG_LENGHT
+        COMBINATION_WRONG_DUPLICATE_COLOR
+        WINNER
+        LOSER
+        RESUME
+    }
+
+    namespace console{
+        class ConsoleView{
+            +ConsoleView(game : Game)
+            #start() : void
+            #play() : void
+            #isResumed() : boolean
+            -displayAllAttempts() : void
+            -getGameResult() : String
+        }
+
+        class ConsoleProposedCombinationInputView{
+            +ConsoleProposedCombinationInputView()
+            +interact() : String
+            -isValid(proposed : String): boolean
+            -isValidColor(proposed : String) : boolean
+            -isRepeatedColor(proposed : String) : boolean
+        }
+        class ConsoleResumeView{
+            +ConsoleResumeView()
+            +isResumed() : bool
+        }
+    }
+
+
+
+    
+}
+
+namespace instanceOf.utils{
+    class Console{
+        +{static} Console
+        +{static} getInstance() : Console
+        +write() : void
+        +read() : String
+    }
+}
+
+namespace instanceOf.mastermind.models{
+
+    class Game{
+        -{static} int NUM_ATTEMPTS = 10
+        +Game()
+        +addAttempt(attempt : Attempt) : void
+        +getAttempt(index : int) : Attempt
+        +getAttemptCount() : int
+        +getHiddenSecret() : String
+        +isGameLost() : boolean
+        +isLastAttemptWinner() : boolean
+    }
+    class Attempt{
+        +Attempt(SecretCombination)
+        +isWinner() : bool
+        +toString() : string
+    }
+
+
+    class Result{
+        +Result(whites: int, blacks: int, isWinner: bool)
+        +isWinner() : bool
+        +toString() : string
+    }
+
+    enum Color{
+        RED('r')
+        GREEN('g')
+        BLUE ('b')
+        YELLOW('y')
+        ORANGE('o')
+        PINK('p')
+        +{static} getAvailableColors() : string
+        +{static} getColorByChar(char) : Color
+        +isSameColorAs(color : Color) : bool
+        +toString() : string
+    }
+
+    abstract class Combination{
+        +{static} LENGHT : int
+        #colors : Color[]
+        #Combination(combination : String)
+        +toString() : string
+    }
+
+    class SecretCombination{
+        +SecretCombination()
+        +evalueCombination(ProposedCombination) : Result
+        +toString() : string
+    }
+
+    class ProposedCombination{
+        +ProposedCombination()
+    }
+}
+
+
+instanceOf.mastermind.models.Game *--> instanceOf.mastermind.models.SecretCombination
+instanceOf.mastermind.models.Game *--> "0..10" instanceOf.mastermind.models.Attempt
+
+instanceOf.mastermind.models.Combination ^-- instanceOf.mastermind.models.SecretCombination
+instanceOf.mastermind.models.Combination ^-- instanceOf.mastermind.models.ProposedCombination
+instanceOf.mastermind.models.Combination *--> "4" instanceOf.mastermind.models.Color
+
+instanceOf.mastermind.models.Attempt *--> instanceOf.mastermind.models.ProposedCombination
+instanceOf.mastermind.models.Attempt *--> instanceOf.mastermind.models.Result
+instanceOf.mastermind.models.Attempt ..> instanceOf.mastermind.models.SecretCombination
+
+
+@enduml
